@@ -29,6 +29,7 @@ static Matrix3d gamma_gain_a; // Learning Rate in Estimation Law
 static Matrix3d alpha_1_b; 
 static Matrix3d alpha_2_b; // proportional only
 static Matrix3d gamma_gain_b; // Learning Rate in Estimation Law
+static Matrix3d gamma_gain_c; // Learning Rate in Estimation Law
 static Matrix3d CL_gain; // concurrent learning size
 static Matrix3d adaptive_gain; // contribution of adaptive to control law
 
@@ -94,7 +95,8 @@ telemetry_t PD_Controller(telemetry_t t, double dt_seconds);
 int SetGains(Matrix3d K_1_, Matrix3d K_2_, Matrix3d K_3_a_, Matrix3d K_4_,
     Matrix3d alpha_1_a_, Matrix3d alpha_2_a_,
     Matrix3d gamma_gain_a_, Matrix3d CL_gain_, Matrix3d adaptive_gain_,
-    Matrix3d K_3_b_, Matrix3d alpha_1_b_, Matrix3d alpha_2_b_, Matrix3d gamma_gain_b_);
+    Matrix3d K_3_b_, Matrix3d alpha_1_b_, Matrix3d alpha_2_b_, Matrix3d gamma_gain_b_,
+    Matrix3d gamma_gain_c_);
 
 int InitController();
 int InitKalmanFilter(Vector3d omega_b2i_measurement, Quaterniond q_i2b_0);

@@ -220,7 +220,8 @@ void LoadGainsFromJSON()
     SetGains(loadMatrix(j["K_1"]), loadMatrix(j["K_2"]), loadMatrix(j["K_3_a"]), loadMatrix(j["K_4"]), 
         loadMatrix(j["alpha_1_a"]), loadMatrix(j["alpha_2_a"]),
         loadMatrix(j["gamma_gain_a"]), loadMatrix(j["CL_gain"]), loadMatrix(j["adaptive_gain"]),
-        loadMatrix(j["K_3_b"]), loadMatrix(j["alpha_1_b"]), loadMatrix(j["alpha_2_b"]), loadMatrix(j["gamma_gain_b"]));
+        loadMatrix(j["K_3_b"]), loadMatrix(j["alpha_1_b"]), loadMatrix(j["alpha_2_b"]), loadMatrix(j["gamma_gain_b"]),
+        loadMatrix(j["gamma_gain_c"]));
 }
 
 
