@@ -70,7 +70,7 @@ static const Matrix3d mm_mass_matrix = (Matrix3d() <<
 
 static const double m_x_max_pos_meters =  (93.0f - 60.0f/2.0f)*1e-3    - 10*1e-3   ; // 93mm to center of mass from limit switch (roughly), then substract half of the width of the mass so it doesnt bump switch 
 static const double m_y_max_pos_meters =  (93.0f - 60.0f/2.0f)*1e-3    - 10*1e-3   ; // 93mm to center of mass from limit switch (roughly), then substract half of the width of the mass so it doesnt bump switch 
-static const double m_z_max_pos_meters =  (173.0f - 70.0f/2.0f)*1e-3    - 90*1e-3   ; 
+static const double m_z_max_pos_meters =  (173.0f - 70.0f/2.0f)*1e-3    - 100*1e-3   ; 
 // static const double m_z_max_pos_meters = -((85.8+97.75)-70.0f/2.0f)*1e-3; // farthest from bottom plat
 // static const double m_z_min_pos_meters = -(85.8+ 70.0f/2.0f)*1e-3; // closest to bottom plate we can get. 71 = distance from CoR to limit switch trigger point
 

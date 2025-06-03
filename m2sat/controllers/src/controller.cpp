@@ -130,7 +130,7 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
             0;
         controller_output.omega_d2i_d += added_desired_term;
         gamma_gain = gamma_gain_c;
-        // std::cout << "Dip 2 back down" << std::endl;
+        std::cout << "Dip 2 back down" << std::endl;
     } else if (t.time*1e-3 >= T_begin_second_dip+T_trans)
     {
         gamma_gain = gamma_gain_c;
@@ -149,11 +149,11 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     // Vector3d omega_b2d_B=  omega_b2i_B_hat - omega_d2i_B; // Omega Body w.r. Desired in BFF that has noise influece, used in control signal
 
     Vector3d r;
-    if (t.time*1e-3 < T_start)
+    if (t.time*1e-3 < T_start-100.0f)
     {
         r = omega_b2d_B + alpha_2_a*q_d2b.vec(); // Definition of r error signal 
     }
-    else if (t.time*1e-3 >= T_start) // in the time for the first dip
+    else if (t.time*1e-3 >= T_start-100.0f) // in the time for the first dip
     {
         r = omega_b2d_B + alpha_2_b*q_d2b.vec(); // Definition of r error signal 
     }
@@ -203,20 +203,20 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     //std::cout << "alpha_2 Error term: " << (Proj_operator *(alpha_2*q_d2b.vec())).transpose() << std::endl;
     //std::cout << "K_1 term: " << (Proj_operator *(-K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B))).transpose() << std::endl;
     //std::cout << "K_2 Derivative term: " << (Proj_operator *(K_2*skew(t.omega_b2i_B)*J*t.omega_b2i_B)).transpose() << std::endl;
-    //std::cout << "K_3 Error term: " << (Proj_operator *(-K_3*r)).transpose() << std::endl;
+    std::cout << "K_3 Error term: " << (Proj_operator *(-K_3_b*r)).transpose() << std::endl;
     //std::cout << "K_4 Derivative term: " << (Proj_operator *( K_4*skew(omega_d2i_B)*omega_b2d_B)).transpose() << std::endl;
     //std::cout << "Alpha_1 term: " << (Proj_operator *(alpha_1*(skew(q_d2b.vec()) + q_d2b.w()*Matrix3d::Identity())*omega_b2d_B)).transpose() << std::endl;
     std::cout << "Adaptive term: " << (Proj_operator *(adaptive_gain*Phi*t.theta_hat)).transpose() << std::endl;
    
     /* Map control Torque to mass positions */ //Transformation of u_com to Commanded Positions as in ref[DOI: 10.2514/1.60380]
-    //if (t.time*1e-3 < T_begin_second_dip+T_trans)
-    //{
-    controller_output.r_mass_commanded = mm_mass_matrix.inverse() * (g_B.cross(controller_output.u_com) / g_B.squaredNorm() ); // desired commanded mass positions
-    //}
-    //else if (t.time*1e-3 >= T_begin_second_dip+T_trans)
-    //{
-        //controller_output.r_mass_commanded = - M * mm_mass_matrix.inverse() * t.theta_hat;
-    //} 
+    if (t.time*1e-3 < T_begin_second_dip+T_trans)
+    {
+        controller_output.r_mass_commanded = mm_mass_matrix.inverse() * (g_B.cross(controller_output.u_com) / g_B.squaredNorm() ); // desired commanded mass positions
+    }
+    else if (t.time*1e-3 >= T_begin_second_dip+T_trans+20.f)
+    {
+        controller_output.r_mass_commanded = -M * mm_mass_matrix.inverse() * t.theta_hat;
+    } 
     /* Make sure r_mass_commanded is within saturation limits (makes sense to apply here before stepper mapping) */
     controller_output.r_mass_commanded = SaturationLimit(controller_output.r_mass_commanded);
     // at this point, r_mass_commanded is relative to the middle zero position of the sliding masses (not the zero limit switch position)
