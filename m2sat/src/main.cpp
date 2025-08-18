@@ -190,7 +190,6 @@ int main()
     }
 }
 
-
 void signalHandler(int signum) {
     std::cout << "\nCaught signal " << signum << ", performing cleanup...\n";
     // deenergize steppers on exit
@@ -200,7 +199,6 @@ void signalHandler(int signum) {
     } 
     std::exit(signum);
 }
-
 
 Matrix3d loadMatrix(const nlohmann::json& j) {
     Matrix3d mat;
@@ -217,12 +215,12 @@ void LoadGainsFromJSON()
     ifstream file("/home/bode/moving-mass-control/m2sat/gains.json");
     nlohmann::json j;
     file >> j;
-    SetGains(loadMatrix(j["K_1"]), loadMatrix(j["K_2"]), loadMatrix(j["K_3"]), loadMatrix(j["K_4"]), 
-        loadMatrix(j["alpha_1"]), loadMatrix(j["alpha_2"]),
-        loadMatrix(j["gamma_gain"]), loadMatrix(j["CL_gain"]), loadMatrix(j["adaptive_gain"]));
+    SetGains(loadMatrix(j["K_1"]), loadMatrix(j["K_2"]), loadMatrix(j["K_3_a"]), loadMatrix(j["K_4"]), 
+        loadMatrix(j["alpha_1_a"]), loadMatrix(j["alpha_2_a"]),
+        loadMatrix(j["gamma_gain_a"]), loadMatrix(j["CL_gain"]), loadMatrix(j["adaptive_gain"]),
+        loadMatrix(j["K_3_b"]), loadMatrix(j["alpha_1_b"]), loadMatrix(j["alpha_2_b"]), loadMatrix(j["gamma_gain_b"]),
+        loadMatrix(j["gamma_gain_c"]));
 }
-
-
 
 uint64_t getTimestamp()
 {
@@ -235,7 +233,6 @@ uint64_t getTimestamp()
 
     return static_cast<uint64_t>(milliseconds);
 }
-
 
 void setNonBlockingInput() {
     struct termios newt;

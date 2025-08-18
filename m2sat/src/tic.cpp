@@ -299,7 +299,12 @@ int SetTicSettings(int fd, uint8_t address)
     tic_set_max_speed(fd, address, STEPPER_MAX_PULSES_PER_SEC*PPS_UNIT_CONVERSION);
     tic_set_starting_speed(fd,address, STEPPER_START_SPEED_PPS*PPS_UNIT_CONVERSION);
     tic_set_step_mode(fd, address, 2); // so we get home faster
-    tic_go_home(fd, address, 0);
+    
+    if (address == 102) {
+        tic_go_home(fd,address, 1);
+    } else {
+        tic_go_home(fd, address, 0);
+    }
 
 
     misc_flags_1_t flags;

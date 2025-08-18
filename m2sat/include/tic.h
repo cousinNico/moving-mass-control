@@ -39,7 +39,7 @@
 /* Physical parameters */
 #define X_OFFSET_FROM_LIMIT_SWITCH_WHOLE_PULSES (318.0f) // measured in full pulses
 #define Y_OFFSET_FROM_LIMIT_SWITCH_WHOLE_PULSES (325.0f)
-#define Z_OFFSET_FROM_LIMIT_SWITCH_WHOLE_PULSES (225.0f)
+#define Z_OFFSET_FROM_LIMIT_SWITCH_WHOLE_PULSES (-225.0f)
 
 /* Read addresses */
 #define ADDR_GET_VARIABLE (0xA1)

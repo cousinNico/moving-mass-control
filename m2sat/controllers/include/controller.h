@@ -20,11 +20,16 @@ using namespace Eigen;
 /* Gains in Control Law u */
 static Matrix3d K_1;
 static Matrix3d K_2; // derivative only 
-static Matrix3d K_3; 
+static Matrix3d K_3_a; 
+static Matrix3d K_3_b; 
 static Matrix3d K_4; // derivative only
-static Matrix3d alpha_1; 
-static Matrix3d alpha_2; // proportional only
-static Matrix3d gamma_gain; // Learning Rate in Estimation Law
+static Matrix3d alpha_1_a; 
+static Matrix3d alpha_2_a; // proportional only
+static Matrix3d gamma_gain_a; // Learning Rate in Estimation Law
+static Matrix3d alpha_1_b; 
+static Matrix3d alpha_2_b; // proportional only
+static Matrix3d gamma_gain_b; // Learning Rate in Estimation Law
+static Matrix3d gamma_gain_c; // Learning Rate in Estimation Law
 static Matrix3d CL_gain; // concurrent learning size
 static Matrix3d adaptive_gain; // contribution of adaptive to control law
 
@@ -65,7 +70,7 @@ static const Matrix3d mm_mass_matrix = (Matrix3d() <<
 
 static const double m_x_max_pos_meters =  (93.0f - 60.0f/2.0f)*1e-3    - 10*1e-3   ; // 93mm to center of mass from limit switch (roughly), then substract half of the width of the mass so it doesnt bump switch 
 static const double m_y_max_pos_meters =  (93.0f - 60.0f/2.0f)*1e-3    - 10*1e-3   ; // 93mm to center of mass from limit switch (roughly), then substract half of the width of the mass so it doesnt bump switch 
-static const double m_z_max_pos_meters =  (173.0f - 70.0f/2.0f)*1e-3    - 90*1e-3   ; 
+static const double m_z_max_pos_meters =  (173.0f - 70.0f/2.0f)*1e-3    - 100*1e-3   ; 
 // static const double m_z_max_pos_meters = -((85.8+97.75)-70.0f/2.0f)*1e-3; // farthest from bottom plat
 // static const double m_z_min_pos_meters = -(85.8+ 70.0f/2.0f)*1e-3; // closest to bottom plate we can get. 71 = distance from CoR to limit switch trigger point
 
@@ -87,9 +92,11 @@ Vector3d SaturationLimit(Vector3d r_com);
 telemetry_t PD_Controller(telemetry_t t, double dt_seconds);
 
 
-int SetGains(Matrix3d K_1_, Matrix3d K_2_, Matrix3d K_3_, Matrix3d K_4_,
-    Matrix3d alpha_1_, Matrix3d alpha_2_,
-    Matrix3d gamma_gain_, Matrix3d CL_gain_, Matrix3d adaptive_gain_);
+int SetGains(Matrix3d K_1_, Matrix3d K_2_, Matrix3d K_3_a_, Matrix3d K_4_,
+    Matrix3d alpha_1_a_, Matrix3d alpha_2_a_,
+    Matrix3d gamma_gain_a_, Matrix3d CL_gain_, Matrix3d adaptive_gain_,
+    Matrix3d K_3_b_, Matrix3d alpha_1_b_, Matrix3d alpha_2_b_, Matrix3d gamma_gain_b_,
+    Matrix3d gamma_gain_c_);
 
 int InitController();
 int InitKalmanFilter(Vector3d omega_b2i_measurement, Quaterniond q_i2b_0);
