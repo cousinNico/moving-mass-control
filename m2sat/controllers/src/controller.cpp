@@ -94,7 +94,7 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     static const double T_trans = 15.0f; // half as long as it takes manuever takes to get to full pitch 
     static const double T_offset =  T_trans + T_start; 
 
-    static const double T_begin_second_dip = T_offset + 100.0f;
+    static const double T_begin_second_dip = T_start + 200.0f;
     static const double T_offset_2 = T_begin_second_dip + T_trans; 
 
     static const double rot_trans = M_PI/12.0f;
@@ -104,7 +104,7 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     if (t.time*1e-3 < T_start)
     {
         gamma_gain = gamma_gain_a;
-        // std::cout << "Initial Level" << std::endl;
+        std::cout << "Maneuver 1" << std::endl;
     }
     else if (t.time*1e-3 >= T_start && (t.time*1e-3 <  T_offset)) // in the time for the first dip
     {
@@ -114,12 +114,12 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
             0;
         controller_output.omega_d2i_d += added_desired_term;
         gamma_gain = gamma_gain_b;
-        // std::cout << "Dip 1" << std::endl;
+        std::cout << "Begin Maneuver 2" << std::endl;
     }
     else if (t.time*1e-3 >= T_offset && t.time*1e-3 < T_begin_second_dip)  // stabilize to origin for this long
     {
         // do nothing to desired trajectory
-        // std::cout << "Pitched up" << std::endl;
+        std::cout << "Maneuver 2" << std::endl;
         gamma_gain = gamma_gain_b;
     }
     else if (t.time*1e-3 >= T_begin_second_dip && t.time*1e-3 < T_begin_second_dip+T_trans) // in the time 
@@ -130,11 +130,17 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
             0;
         controller_output.omega_d2i_d += added_desired_term;
         gamma_gain = gamma_gain_c;
-        std::cout << "Dip 2 back down" << std::endl;
-    } else if (t.time*1e-3 >= T_begin_second_dip+T_trans)
+        std::cout << "Begin Maneuver 3" << std::endl;
+    } 
+    else if (t.time*1e-3 >= T_begin_second_dip+T_trans && t.time*1e-3 < T_begin_second_dip+T_start)
     {
         gamma_gain = gamma_gain_c;
-        std::cout << "Finished" << std::endl;
+        std::cout << "Maneuver 3" << std::endl;
+    }
+    else if (t.time*1e-3 >= T_begin_second_dip+T_start )
+    {
+        gamma_gain = gamma_gain_c;
+        std::cout << "Test Completed - Balanced" << std::endl;
     }
     
     Vector3d omega_dot_d2i_D = (Vector3d() << 0,0,0).finished(); //0; 0*A*exp(-f*t)*(f*sin(b*t) - b*cos(b*t));0];
@@ -149,11 +155,11 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     // Vector3d omega_b2d_B=  omega_b2i_B_hat - omega_d2i_B; // Omega Body w.r. Desired in BFF that has noise influece, used in control signal
 
     Vector3d r;
-    if (t.time*1e-3 < T_start-100.0f)
+    if (t.time*1e-3 < 0.5*T_start)
     {
         r = omega_b2d_B + alpha_2_a*q_d2b.vec(); // Definition of r error signal 
     }
-    else if (t.time*1e-3 >= T_start-100.0f) // in the time for the first dip
+    else if (t.time*1e-3 >= 0.5*T_start) // in the time for the first dip
     {
         r = omega_b2d_B + alpha_2_b*q_d2b.vec(); // Definition of r error signal 
     }
@@ -172,7 +178,7 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     /* Control Torque as Designed by Lyapunov Analysis */
     Matrix3d Proj_operator = Matrix3d::Identity() - ((g_B*g_B.transpose())) / g_B.squaredNorm();
 
-    if (t.time*1e-3 < T_start-100.0f)
+    if (t.time*1e-3 < 0.5*T_start)
     {
     controller_output.u_com = Proj_operator * (
             -K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B) + 
@@ -183,7 +189,29 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
             + K_4*skew(omega_d2i_B)*omega_b2d_B 
             - 0.5*alpha_1_a*(skew(q_d2b.vec()) + q_d2b.w()*Matrix3d::Identity())*omega_b2d_B); // desired torque 
     }
-    else if (t.time*1e-3 >= T_start-100.0f) // in the time for the first dip
+    else if (t.time*1e-3 >= 0.5*T_start && t.time*1e-3 < T_start) // half way into first first maneuver
+    {
+        controller_output.u_com = Proj_operator * (
+            -K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B) + 
+            K_2*skew(t.omega_b2i_B)*J*t.omega_b2i_B 
+            - adaptive_gain*Phi*t.theta_hat 
+            - K_3_b*r )// - diag((theta_hat)*(theta_hat))*r
+            + Proj_operator*J*(omega_dot_d2i_B 
+           + K_4*skew(omega_d2i_B)*omega_b2d_B 
+            - 0.5*alpha_1_b*(skew(q_d2b.vec()) + q_d2b.w()*Matrix3d::Identity())*omega_b2d_B); // desired torque 
+    }
+    else if (t.time*1e-3 >= T_start && t.time*1e-3 < T_begin_second_dip - 0.5*T_start) // second maneuver begins
+    {
+        controller_output.u_com = Proj_operator * (
+            -K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B) + 
+            K_2*skew(t.omega_b2i_B)*J*t.omega_b2i_B 
+            - adaptive_gain*Phi*t.theta_hat 
+            - K_3_b*r )// - diag((theta_hat)*(theta_hat))*r
+            + Proj_operator*J*(omega_dot_d2i_B 
+           + K_4*skew(omega_d2i_B)*omega_b2d_B 
+            - 0.5*alpha_1_b*(skew(q_d2b.vec()) + q_d2b.w()*Matrix3d::Identity())*omega_b2d_B); // desired torque 
+    }
+    else if (t.time*1e-3 >= T_begin_second_dip - 0.5*T_start) // half way into second maneuver
     {
         controller_output.u_com = Proj_operator * (
             -K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B) + 
@@ -199,21 +227,22 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
         //controller_output.u_com = Phi*t.theta_hat;
     //}
     
-
+    std::cout << "Test Time: " << t.time*1e-3 << std::endl;
+    //std::cout << "mat_m_inv: " << mm_mass_matrix.inverse() << std::endl;
     //std::cout << "alpha_2 Error term: " << (Proj_operator *(alpha_2*q_d2b.vec())).transpose() << std::endl;
     //std::cout << "K_1 term: " << (Proj_operator *(-K_1*Jm_B_dot*(0.5*r - t.omega_b2i_B))).transpose() << std::endl;
     //std::cout << "K_2 Derivative term: " << (Proj_operator *(K_2*skew(t.omega_b2i_B)*J*t.omega_b2i_B)).transpose() << std::endl;
-    std::cout << "K_3 Error term: " << (Proj_operator *(-K_3_b*r)).transpose() << std::endl;
+    // std::cout << "K_3 Error term: " << (Proj_operator *(-K_3_b*r)).transpose() << std::endl;
     //std::cout << "K_4 Derivative term: " << (Proj_operator *( K_4*skew(omega_d2i_B)*omega_b2d_B)).transpose() << std::endl;
     //std::cout << "Alpha_1 term: " << (Proj_operator *(alpha_1*(skew(q_d2b.vec()) + q_d2b.w()*Matrix3d::Identity())*omega_b2d_B)).transpose() << std::endl;
-    std::cout << "Adaptive term: " << (Proj_operator *(adaptive_gain*Phi*t.theta_hat)).transpose() << std::endl;
+    // std::cout << "Adaptive term: " << (Proj_operator *(adaptive_gain*Phi*t.theta_hat)).transpose() << std::endl;
    
     /* Map control Torque to mass positions */ //Transformation of u_com to Commanded Positions as in ref[DOI: 10.2514/1.60380]
-    if (t.time*1e-3 < T_begin_second_dip+T_trans)
+    if (t.time*1e-3 < T_begin_second_dip+T_start)
     {
         controller_output.r_mass_commanded = mm_mass_matrix.inverse() * (g_B.cross(controller_output.u_com) / g_B.squaredNorm() ); // desired commanded mass positions
     }
-    else if (t.time*1e-3 >= T_begin_second_dip+T_trans+20.f)
+    else if (t.time*1e-3 >= T_begin_second_dip+T_start)
     {
         controller_output.r_mass_commanded = -M * mm_mass_matrix.inverse() * t.theta_hat;
     } 
@@ -227,10 +256,16 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     omega_d2i_D_quaternion.w() = 0; 
     omega_d2i_D_quaternion.vec() = controller_output.omega_d2i_d; // (Vector3d() << 0, 0, 5).finished();
     
+
     Quaterniond q_i2d_dot = t.q_i2d * omega_d2i_D_quaternion;  // quat_mult(q_i2d,[0;omega_d2i_D]); % q_dot of DF w.r. to Inertial Frame
     q_i2d_dot.coeffs() *= 0.5; // dont forget to scale by 0.5 since we cant do that above due to * operator override
     controller_output.q_i2d.coeffs() += q_i2d_dot.coeffs()*dt_seconds; 
     controller_output.q_i2d.normalize();
+
+    //if (t.time*1e-3 > T_start && t.time*1e-3 < T_start+0.1f) // || (t.time*1e-3 > 0.1f) 
+    //{
+    //    controller_output.q_i2d = t.q_i2b;
+    //}
 
     /* Update law */
     // Vector3d theta_hat_dot = gamma_gain * (Phi.transpose()*r) ; //+ CL_on*CL_gain*concurrent_learning_Tau_ext); //  Adaptive update law
@@ -240,7 +275,7 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     controller_output.theta_hat += theta_hat_dot*dt_seconds; 
 
     /* Compute our actual control torque at the moment for logging */
-    controller_output.u_actual = -mm_mass_matrix * g_B.cross(t.r_mass);
+    controller_output.u_actual = - g_B.cross(mm_mass_matrix*(t.r_mass));
 
     return controller_output;
 }

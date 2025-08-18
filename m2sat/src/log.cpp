@@ -59,7 +59,10 @@ ss << "time" << ","
 << "u_actual_2" << ","
 << "theta_hat_0" << ","
 << "theta_hat_1" << ","
-<< "theta_hat_2" << "\n";
+<< "theta_hat_2" << ","
+<< "omega_d2i_0" << ","
+<< "omega_d2i_1" << ","
+<< "omega_d2i_2" << ",""\n";
 
     // Write the stringstream content to the file
     file << ss.str();
@@ -79,6 +82,7 @@ void LogTele(std::ofstream& file, const telemetry_t & tele)
     saveData(file, tele.u_com);
     saveData(file, tele.u_actual);
     saveData(file, tele.theta_hat);
+    saveData(file, tele.omega_d2i_d);
     file << "\n";
 }
 

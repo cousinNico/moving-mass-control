@@ -190,7 +190,6 @@ int main()
     }
 }
 
-
 void signalHandler(int signum) {
     std::cout << "\nCaught signal " << signum << ", performing cleanup...\n";
     // deenergize steppers on exit
@@ -200,7 +199,6 @@ void signalHandler(int signum) {
     } 
     std::exit(signum);
 }
-
 
 Matrix3d loadMatrix(const nlohmann::json& j) {
     Matrix3d mat;
@@ -224,8 +222,6 @@ void LoadGainsFromJSON()
         loadMatrix(j["gamma_gain_c"]));
 }
 
-
-
 uint64_t getTimestamp()
 {
     // Get the current time point from the system clock
@@ -237,7 +233,6 @@ uint64_t getTimestamp()
 
     return static_cast<uint64_t>(milliseconds);
 }
-
 
 void setNonBlockingInput() {
     struct termios newt;
