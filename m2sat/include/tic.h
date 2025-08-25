@@ -10,8 +10,8 @@
 
 #define RAD_TO_REV (1/(2*M_PI))
 
-#define STEPPER_MAX_ACCEL_PPS2  (150000.0f)  //80000 on 4th steps  // pulses per second squared, if we go higher, we need more current but we are already current limiting
-#define STEPPER_MAX_DECELL_PPS2 (150000.0f) //60000 on 4th steps
+#define STEPPER_MAX_ACCEL_PPS2  (100000.0f)  //80000 on 4th steps  // pulses per second squared, if we go higher, we need more current but we are already current limiting
+#define STEPPER_MAX_DECELL_PPS2 (100000.0f) //60000 on 4th steps
 #define TIC_CURRENT_LIMIT_MILLIAMPS (1800)
 #define STEPPER_STEP_MODE_NUMERIC (8.0f) // 2 half step, 4 quater etc
 #define STEPPER_STEP_MODE (3) 
@@ -29,9 +29,9 @@
 
 
 /* Stepper max rates */
-#define STEPPER_MAX_RAD_PER_SEC (100.0f) 
+#define STEPPER_MAX_RAD_PER_SEC (50.0f) 
 #define STEPPER_MAX_PULSES_PER_SEC (STEPPER_MAX_RAD_PER_SEC * RAD_TO_REV * STEPPER_STEPS_PER_REV * STEPPER_STEP_MODE_NUMERIC)
-#define STEPPER_START_SPEED_PPS (5.0f) // speed the motor tries to start at, if too high, it stalls
+#define STEPPER_START_SPEED_PPS (0.0f) // speed the motor tries to start at, if too high, it stalls
 
 
 #define TIC_I2C_ADDRESS_DEVICE "/dev/i2c-1"

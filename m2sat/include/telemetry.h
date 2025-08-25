@@ -19,7 +19,7 @@ struct telemetry_t
     Vector3d r_mass_commanded = Vector3d::Zero(); // commanded mass position meters
     Vector3d u_com = Vector3d::Zero(); // commanded torque Nm
     Vector3d u_actual = Vector3d::Zero(); // actual control torque Nm
-    std::vector<Vector6d> nu; // kalman filter estimate
+    Vector6d nu; // kalman filter estimate
     Vector3d theta_hat = Vector3d::Zero();
     Vector3d omega_d2i_d = Vector3d::Zero();
 

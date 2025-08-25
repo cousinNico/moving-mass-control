@@ -18,13 +18,7 @@ static const int j_smooth = 100; // iterations till we turn on fixed point smoot
 
 
 static const int v_smooth = 30; // how many future points to include in smoothing
-static Matrix<double, 6, 6> Q = 
-    (Matrix<double, 6, 6>() << 0.01 * Matrix3d::Identity(), Matrix3d::Zero(),
-    Matrix3d::Zero(), 10*Matrix3d::Identity()).finished(); // Process noise covariance
-
-static Matrix3d R = sigma_omega*sigma_omega * Matrix3d::Identity(); // measurement noise covariance
-
-
-VectorXd CalcXhat();
 
 int InitCovariance();
+int PushMeasurement(Vector<double,3> new_omega_b2i_B_measurement);
+VectorXd CalcNu(const double dt,  std::vector<Vector<double, 6>> &nu, const Matrix<double,6,6>& A_state_matrix);

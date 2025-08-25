@@ -41,26 +41,11 @@ struct imu_data_vn_format_t
         tele->q_i2b.y() = quaternion.y;
         tele->q_i2b.z() = quaternion.z;
 
-        // tele->q_b2i =  q_b2imu.inverse()*tele->q_b2i; 
-        
         // body angular velocity
         tele->omega_b2i_B.x() = angularRate.x; 
         tele->omega_b2i_B.y() = angularRate.y; 
         tele->omega_b2i_B.z() = angularRate.z;    
-
-        // std::cout << tele->omega_b2i_B.transpose() << std::endl;
-        // apply rotation to map imu frame to body frame on ang velocity
-        // tele->omega_b2i_B = quat_rotate(q_b2imu.inverse(), tele->omega_b2i_B);
-    }
-
-    Vector3d quat_rotate(const Quaterniond& q, const Vector3d& v)
-    {
-        Quaterniond v_quat(0, v.x(), v.y(), v.z());  // Pure quaternion [0; v]
-        Quaterniond rotated = q * v_quat * q.conjugate();  // q * [0; v] * q^*
-        return rotated.vec();  // Extract the vector part (x, y, z)
-    }
-
-    
+    }    
 };
 
 void ConnectAndConfigureIMU(imu_data_vn_format_t * imu_data, std::mutex * imu_mutex);

@@ -37,7 +37,6 @@ inline telemetry_t fromProto(const TelemetryMessage& proto) {
     Vector3d nu_top = fromProtoVector3d(proto.nu_top());
     Vector3d nu_bot = fromProtoVector3d(proto.nu_bottom());
     Vector6d nu; nu << nu_top, nu_bot;
-    std::vector<Vector6d> nu_vec; nu_vec.push_back(nu);
 
     return 
     {
@@ -51,7 +50,7 @@ inline telemetry_t fromProto(const TelemetryMessage& proto) {
         fromProtoVector3d(proto.r_mass_commanded()),
         fromProtoVector3d(proto.u_com()),
         fromProtoVector3d(proto.u_actual()),
-        nu_vec,
+        nu,
         fromProtoVector3d(proto.theta_hat()),
         fromProtoVector3d(proto.omega_d2i_d())
         
@@ -70,13 +69,8 @@ inline TelemetryMessage toProto(const telemetry_t& t) {
     toProtoVector3d(t.r_mass_commanded, proto.mutable_r_mass_commanded());
     toProtoVector3d(t.u_com, proto.mutable_u_com());
     toProtoVector3d(t.u_actual, proto.mutable_u_actual());
-    if (t.nu.size() > 0) {
-        toProtoVector3d(t.nu.front().segment(0,3), proto.mutable_nu_top());
-        toProtoVector3d(t.nu.front().segment(3,3), proto.mutable_nu_bottom());
-    } else {
-        proto.mutable_nu_top()->Add(0); proto.mutable_nu_top()->Add(0); proto.mutable_nu_top()->Add(0); 
-        proto.mutable_nu_bottom()->Add(0); proto.mutable_nu_bottom()->Add(0); proto.mutable_nu_bottom()->Add(0); 
-    }
+    toProtoVector3d(t.nu.segment(0,3), proto.mutable_nu_top());
+    toProtoVector3d(t.nu.segment(3,3), proto.mutable_nu_bottom());
     toProtoVector3d(t.theta_hat, proto.mutable_theta_hat());
     toProtoVector3d(t.omega_d2i_d, proto.mutable_omega_d2i_d());
 

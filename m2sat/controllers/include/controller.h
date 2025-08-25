@@ -16,6 +16,7 @@
 static const int CL_turn_on = 10; // wait until this many points are in nu to turn on CL
 
 using namespace Eigen;
+using namespace std::chrono;
 
 /* Gains in Control Law u */
 static Matrix3d K_1;
@@ -36,9 +37,9 @@ static Matrix3d adaptive_gain; // contribution of adaptive to control law
 static const double A = M_PI/3; // Desired Oscillation Amplitude
 
 /* Concurrent learning gains */
-static const double CL_on = 0.0f; 
-static const double CL_point_accept_epsilon = 1; // Threshold to accept new points
-static const int p_bar = 10; // maximum number of points stored
+static const double CL_on = 1.0f; 
+static const double CL_point_accept_epsilon = 0.1; // Threshold to accept new points
+static const int p_bar = 100; // maximum number of points stored
 
 /* System matrices */
 static const Matrix<double, 6, 6> A_state_matrix = 
@@ -59,7 +60,7 @@ static const Matrix3d J_B = (Matrix3d() <<
     J_xz_B, J_yz_B, Jzz_B).finished();
 static Matrix3d J_P; // principal moi
 
-static const double M = 6.70f + 0.800f; // Simulator mass kg
+static const double M = 7.1f; // 6.70f + 0.800f; // Simulator mass kg
 static const double m_x = 2*260*1e-3; // Actuator masses kg
 static const double m_y = 2*260*1e-3; // Actuator masses kg
 static const double m_z = 268*1e-3; // Actuator masses kg
@@ -83,6 +84,15 @@ static const Vector3d theta_hat_max = (Vector3d() << 0.1, 0.1, 0.3).finished();
 
 static const Vector3d g_I = (Vector3d() << 0,0,9.81).finished(); // % Gravity vector
 
+// discrete state transition matrix for kalman filter, needs upper quadrant updated by dt each time
+static const Matrix<double, 6,6> Phi_stm = (Matrix<double,6,6>() << 
+        1, 0, 0, 1, 0, 0,
+        0, 1, 0, 0, 1, 0,
+        0, 0, 1, 0, 0, 1,
+        0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 1).finished();
+
 /* Main controller functions */
 telemetry_t Controller(telemetry_t t, double dt_seconds);
 Vector3d CalcTorqueCommand();
@@ -99,7 +109,6 @@ int SetGains(Matrix3d K_1_, Matrix3d K_2_, Matrix3d K_3_a_, Matrix3d K_4_,
     Matrix3d gamma_gain_c_);
 
 int InitController();
-int InitKalmanFilter(Vector3d omega_b2i_measurement, Quaterniond q_i2b_0);
+int InitKalmanFilter(std::vector<Vector6d>& nu, Vector3d omega_b2i_measurement, Quaterniond q_i2b_0);
 
 Matrix3d skew(const Eigen::Vector3d& v); // Function to compute the skew-symmetric matrix
-

@@ -48,6 +48,11 @@ bool kalman_filter_initialized = false;
 
 static uint64_t exp_start_time;
 
+
+static std::vector<Vector<double, 6>> nu; // estimated states time history
+
+
+
 int main()
 {
     /* Signal catching stuff for clean exits */
@@ -120,9 +125,18 @@ int main()
 
             if (!kalman_filter_initialized)
             {
-                InitKalmanFilter(tele.omega_b2i_B, tele.q_i2b);
+                InitKalmanFilter(nu, tele.omega_b2i_B, tele.q_i2b);
                 kalman_filter_initialized = true;
             }
+
+            /* Perform Kalman filtering */
+            // get dt for Phi_stm
+            static auto t_prev = high_resolution_clock::now();
+            auto now = high_resolution_clock::now();
+            duration<double> dt = now - t_prev; // dt in seconds
+            PushMeasurement(tele.omega_b2i_B);
+            tele.nu = CalcNu(dt.count(), nu, Phi_stm);
+            t_prev = now;
         } 
         
         /* Get Mass Positions and Velocities from motor controllers */
@@ -142,7 +156,7 @@ int main()
 
         /* Run the controller */
         auto check_controller_clock = clockManager.Elapsed("controller");        
-        if (check_controller_clock.first && (imu_data.valid_data == true)) // if sufficient time elapsed and we have imu data
+        if (check_controller_clock.first && (imu_data.valid_data == true) && (kalman_filter_initialized == true)) // if sufficient time elapsed and we have imu data
         {
             tele = Controller(tele, check_controller_clock.second.count());
             // tele = PD_Controller(tele,  check_controller_clock.second.count());

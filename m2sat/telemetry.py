@@ -286,7 +286,7 @@ class MultiTelemetryPlotter:
                 channels = config['channels']
                 data = np.array(self.data[field])  # shape: (n_points, channels)
                 for ch in range(channels):
-                    if data.size:
+                    if data.size:;
                         self.curves[idx][ch].setData(t, data[:, ch])
 
 
