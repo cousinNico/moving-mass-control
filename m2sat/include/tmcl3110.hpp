@@ -91,6 +91,16 @@ public:
         *output = r.value;
         return r.value;
     }
+    
+    void setMicrostepResolution(uint8_t motor, int resolutionPow2)
+    {
+        if (resolutionPow2 < 0 || resolutionPow2 > 8)
+            throw std::invalid_argument("Microstep index must be 0–8");
+        auto r = SAP(140, motor, resolutionPow2);
+        if (r.status != 100)
+            throw std::runtime_error("Failed to set microstep resolution");
+    }
+
 private:
     int fd_;
     uint8_t addr_;
