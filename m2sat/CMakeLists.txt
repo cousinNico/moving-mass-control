@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Only to compile in windows
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/VCPKG/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
+# set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/VCPKG/vcpkg/scripts/buildsystems/vcpkg.cmake"
+#     CACHE STRING "Vcpkg toolchain file")
 
 # Set project name
 project(m2sat)
