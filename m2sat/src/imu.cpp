@@ -14,7 +14,7 @@ static VnSensor vs; // this needs to be defined outside of a temporary function 
 static std::mutex * imu_mutex_;
 
 #define VN_IMU_BAUD_RATE 115200
-#define VN_IMU_UPDATE_HZ 100
+#define VN_IMU_UPDATE_HZ 40
 
 void asciiAsyncMessageReceived(void* imu_struct, Packet& p, size_t index);
 

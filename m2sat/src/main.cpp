@@ -17,13 +17,15 @@
 #include "imu.h"
 #include "tic.h"
 #include "log.h"
-
+#include "tmcl3110.hpp"
 
 #define MAIN_LOOP_RATE_HZ (500.0f)
 #define ACTUATION_RATE_HZ (100.0f)
 #define LOGGING_RATE_HZ (100.0f)
 
 #define MOTOR_FEEDBACK_RATE_HZ (200.0f)
+
+#define TMCL3110_ADDRESS ("/dev/ttyACM0")
 
 void signalHandler(int signum);
 void MotorFeedbackLoop(telemetry_t * tele);
@@ -87,19 +89,47 @@ int main()
     /* Load gains for controller from JSON*/
     LoadGainsFromJSON();
 
-    /* Start TIC communication */
-    stepper_i2c_fd = open_i2c_device(TIC_I2C_ADDRESS_DEVICE);
-    if (stepper_i2c_fd < 0) 
-    {
-        std::cout << "Could not connect to i2c bus!!!" << std::endl;
-    } else // configure the tics
-    {
-        // tic_set_reverse_mode(stepper_i2c_fd, 102);
-        for (auto iter = tic_id.begin(); iter != tic_id.end(); iter++)
-        {
-            SetTicSettings(stepper_i2c_fd, *iter); 
-        } 
-    }
+    /* Start TMCL communication*/
+    TMCL3110 tmcl(TMCL3110_ADDRESS, 115200, /*module addr*/ 1);
+
+        tmcl.setMicrostepResolution(0, 1);  // 1- fullstep
+        tmcl.setMicrostepResolution(1, 1);  // 1- fullstep
+        tmcl.setMicrostepResolution(2, 1);  // 1- fullstep
+
+        // Setup max velocity and max acceleration for the three motors
+        for (uint8_t m=0; m<3; ++m) {
+            auto r1 = tmcl.SAP(/*param=*/4, m, /*max vel*/ 500); // SAP 4 (Max Velocity)
+            auto r2 = tmcl.SAP(/*param=*/5, m, /*max acc*/ 50); // SAP 5 (Max Acceleration)
+            if (r1.status!=100 || r2.status!=100) throw std::runtime_error("SAP failed");
+        }
+        std::vector<int32_t> target_positions = {30000, 30000, 10000}; // target positions for motors 0, 1, and 2 in microsteps
+        // Setup max current for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/6, m, /*max current*/ 62); // SAP 6 (Max Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
+
+        // Setup standby current for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/7, m, /*standby current*/ 5); // SAP 7 (Standby Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
+
+        std::cout<<"Motors setup complete\n";
+
+    // /* Start TIC communication */
+    // stepper_i2c_fd = open_i2c_device(TIC_I2C_ADDRESS_DEVICE);
+    // if (stepper_i2c_fd < 0) 
+    // {
+    //     std::cout << "Could not connect to i2c bus!!!" << std::endl;
+    // } else // configure the tics
+    // {
+    //     // tic_set_reverse_mode(stepper_i2c_fd, 102);
+    //     for (auto iter = tic_id.begin(); iter != tic_id.end(); iter++)
+    //     {
+    //         SetTicSettings(stepper_i2c_fd, *iter); 
+    //     } 
+    // }
     
     waitForKeyPress(); // manual starting of the experiment. steppers are sent to the origin and held there
     tare_heading(); // zero heading angle
@@ -131,8 +161,8 @@ int main()
             int32_t motor_positions[3]; int32_t motor_velocities[3];
             for (int i = 0; i<3; i++)
             {
-                tic_get_current_position(stepper_i2c_fd, tic_id.at(i), &motor_positions[i]); // puts data into motor_positions
-                tic_get_current_velocity(stepper_i2c_fd, tic_id.at(i), &motor_velocities[i]); // puts data into motor_velocities
+                tmcl.getActualPosition(i, &motor_positions[i]);
+                tmcl.getActualSpeedInt(i, &motor_velocities[i]);
             }
     
             // Map shaft position and velocity to moving mass position and velocity
@@ -152,13 +182,13 @@ int main()
         /* Actuate motors */
         if (clockManager.Elapsed("actuation").first)
         {
-            std::vector<int32_t> motor_shaft_position_pulses = ConvertMassPositionToMotorPosition(
+            std::vector<int32_t> target_positions = ConvertMassPositionToMotorPosition(
                 tele.r_mass_commanded.x(), tele.r_mass_commanded.y(),  tele.r_mass_commanded.z());
             // Send motor position commands to motors
             for (uint8_t i = 0; i<3; i++) 
             {
-                tic_exit_safe_start(stepper_i2c_fd, tic_id.at(i));
-                tic_set_target_position(stepper_i2c_fd, tic_id.at(i), motor_shaft_position_pulses.at(i));
+                auto r = tmcl.MVP_ABS(i, target_positions[i]);
+            if (r.status != 100) throw std::runtime_error("MVP_ABS failed for motor " + std::to_string(i));
             }
         }
 
@@ -212,7 +242,7 @@ Matrix3d loadMatrix(const nlohmann::json& j) {
 
 void LoadGainsFromJSON()
 {
-    ifstream file("/home/bode/moving-mass-control/m2sat/gains.json");
+    ifstream file("/home/pi/moving-mass-control/m2sat/gains.json");
     nlohmann::json j;
     file >> j;
     SetGains(loadMatrix(j["K_1"]), loadMatrix(j["K_2"]), loadMatrix(j["K_3_a"]), loadMatrix(j["K_4"]), 
