@@ -52,6 +52,12 @@ int main() {
             if (r3.status!=100) throw std::runtime_error("SAP failed");
         }
 
+        // Setup standby current for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/7, m, /*standby current*/ 5); // SAP 7 (Standby Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
+
         std::cout<<"Motors setup complete\n";
 
         // Example: read actual positions and velocities
@@ -100,9 +106,33 @@ int main() {
         TMCL3110 tmcl(TMCL3110_ADDRESS, 115200, /*module addr*/ 1);
         tmcl.MST(0);
         tmcl.MST(1);
+        tmcl.MST(2);
+        // Setup max current to 0 for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/6, m, /*max current*/ 0); // SAP 6 (Max Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
+
+        // Setup standby current to 0 for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/7, m, /*standby current*/ 0); // SAP 7 (Standby Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
         return 1;
     }
     TMCL3110 tmcl(TMCL3110_ADDRESS, 115200, /*module addr*/ 1);
         tmcl.MST(0);
         tmcl.MST(1);
+        tmcl.MST(2);
+        // Setup max current to 0 for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/6, m, /*max current*/ 0); // SAP 6 (Max Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
+
+        // Setup standby current to 0 for each motor
+        for (uint8_t m=0; m<3; ++m) {
+            auto r3 = tmcl.SAP(/*param=*/7, m, /*standby current*/ 0); // SAP 7 (Standby Current) 0-255
+            if (r3.status!=100) throw std::runtime_error("SAP failed");
+        }
 }
