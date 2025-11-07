@@ -45,7 +45,7 @@ int main() {
             auto r2 = tmcl.SAP(/*param=*/5, m, /*max acc*/ 50); // SAP 5 (Max Acceleration)
             if (r1.status!=100 || r2.status!=100) throw std::runtime_error("SAP failed");
         }
-        std::vector<int32_t> target_positions = {0*20000, 0*20000, 0}; // target positions for motors 0, 1, and 2 in microsteps
+        std::vector<int32_t> target_positions = {20000, 20000, 30000}; // target positions for motors 0, 1, and 2 in microsteps
         // Setup max current for each motor
         for (uint8_t m=0; m<3; ++m) {
             auto r3 = tmcl.SAP(/*param=*/6, m, /*max current*/ 62); // SAP 6 (Max Current) 0-255
@@ -65,7 +65,7 @@ int main() {
         
         try
         {
-            for (int i = 0; i<2; i++)
+            for (int i = 0; i<3; i++)
             {
                 tmcl.getActualPosition(i, &motor_positions[i]);
                 tmcl.getActualSpeedInt(i, &motor_velocities[i]);
@@ -81,7 +81,7 @@ int main() {
 
         // Example: set absolute target position
 
-        for (int i = 0; i<2; i++){
+        for (int i = 0; i<3; i++){
             auto r = tmcl.MVP_ABS(i, target_positions[i]);
             if (r.status != 100) throw std::runtime_error("MVP_ABS failed for motor " + std::to_string(i));
         }
@@ -97,7 +97,7 @@ int main() {
         std::cout<<"HERE"<<std::endl;
         
         // Stop all motors
-        for (int i = 0; i<2; i++){
+        for (int i = 0; i<3; i++){
             tmcl.MST(i);
         }
         return 0;
