@@ -321,7 +321,8 @@ telemetry_t Controller(telemetry_t t, double dt_seconds)
     } 
     /* Make sure r_mass_commanded is within saturation limits (makes sense to apply here before stepper mapping) */
     controller_output.r_mass_commanded = SaturationLimit(controller_output.r_mass_commanded);
-
+    
+    std::cout << "rmass:" << controller_output.r_mass_commanded.transpose() << std::endl;
     // at this point, r_mass_commanded is relative to the middle zero position of the sliding masses (not the zero limit switch position)
 
     
